@@ -22,7 +22,7 @@ The official website for Internet Kids audio plugins, built with Flutter Web.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/internet-kids-website.git
+git clone https://github.com/gjnail/internet-kids-website.git
 cd internet-kids-website
 ```
 
