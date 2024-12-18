@@ -4,6 +4,7 @@ import 'package:internet_kids_website/core/routes/app_router.dart';
 import 'package:internet_kids_website/features/home/domain/models/rave_state.dart';
 import 'package:internet_kids_website/features/home/presentation/bloc/home_bloc.dart';
 import 'package:internet_kids_website/features/home/presentation/widgets/animated_title.dart';
+import 'package:internet_kids_website/features/home/presentation/widgets/mailing_list_signup.dart';
 import 'package:internet_kids_website/features/home/presentation/widgets/project_card.dart';
 import 'package:internet_kids_website/features/home/presentation/widgets/rave_toggle_button.dart';
 import 'package:internet_kids_website/features/home/presentation/widgets/social_button.dart';
@@ -125,6 +126,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                 ],
                               ),
                             ),
+                            const SizedBox(height: 40),
+                            const MailingListSignup(),
                             const SizedBox(height: 40),
                             Wrap(
                               spacing: 20,
