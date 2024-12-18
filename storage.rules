@@ -2,15 +2,13 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow public read access to installer files only with a valid download token
-    match /downloads/{platform}/{file} {
-      allow read: if request.auth != null && 
-                  request.auth.token.downloadAccess == true &&
-                  request.auth.token.platform == platform;
-      allow write: if false;  // Only allow uploads through admin SDK
+    // Allow public read access to all files in the downloads directory
+    match /downloads/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
     }
     
-    // Deny access to all other files
+    // Default rule - deny everything else
     match /{allPaths=**} {
       allow read, write: if false;
     }
