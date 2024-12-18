@@ -1167,30 +1167,37 @@ class SuccessPage extends StatelessWidget {
 
   Future<void> _handleMacDownload(BuildContext context) async {
     try {
+      print('Starting Mac download process...');
+      
       // Initialize Firebase if not already initialized
       if (Firebase.apps.isEmpty) {
+        print('Initializing Firebase...');
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
 
-      // Get download URLs
+      print('Getting Firebase Storage instance...');
       final storage = FirebaseStorage.instance;
+      
+      print('Creating references to Mac files...');
       final auRef = storage.ref().child('downloads/mac/au.pkg');
       final vst3Ref = storage.ref().child('downloads/mac/vst3.pkg');
 
-      // Get download URLs
+      print('Getting download URLs...');
       final auUrl = await auRef.getDownloadURL();
+      print('AU URL: $auUrl');
       final vst3Url = await vst3Ref.getDownloadURL();
+      print('VST3 URL: $vst3Url');
 
-      // Start downloads
+      print('Opening download windows...');
       html.window.open(auUrl, '_blank');
-      // Add a small delay for the second download to ensure browser doesn't block it
       Future.delayed(const Duration(seconds: 1), () {
         html.window.open(vst3Url, '_blank');
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Download error: $e');
+      print('Stack trace: $stackTrace');
       if (context.mounted) {
         _showErrorDialog(context, e);
       }
@@ -1199,22 +1206,31 @@ class SuccessPage extends StatelessWidget {
 
   Future<void> _handleWindowsDownload(BuildContext context) async {
     try {
+      print('Starting Windows download process...');
+      
       // Initialize Firebase if not already initialized
       if (Firebase.apps.isEmpty) {
+        print('Initializing Firebase...');
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
 
-      // Get download URL
+      print('Getting Firebase Storage instance...');
       final storage = FirebaseStorage.instance;
+      
+      print('Creating reference to Windows file...');
       final windowsRef = storage.ref().child('downloads/windows/IKDistortion-Windows.zip');
-      final windowsUrl = await windowsRef.getDownloadURL();
 
-      // Start download
+      print('Getting download URL...');
+      final windowsUrl = await windowsRef.getDownloadURL();
+      print('Windows URL: $windowsUrl');
+
+      print('Opening download window...');
       html.window.open(windowsUrl, '_blank');
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Download error: $e');
+      print('Stack trace: $stackTrace');
       if (context.mounted) {
         _showErrorDialog(context, e);
       }
@@ -1222,15 +1238,28 @@ class SuccessPage extends StatelessWidget {
   }
 
   void _showErrorDialog(BuildContext context, dynamic error) {
+    print('Showing error dialog: $error');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Download Error'),
-        content: Text('Failed to start download: $error'),
+        backgroundColor: const Color(0xFF280040),
+        title: const Text(
+          'Download Error',
+          style: TextStyle(color: Colors.cyan),
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            'Failed to start download: $error',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: Colors.cyan),
+            ),
           ),
         ],
       ),
