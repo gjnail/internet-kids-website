@@ -1165,7 +1165,7 @@ class RaveGridPainter extends CustomPainter {
 class SuccessPage extends StatelessWidget {
   const SuccessPage({super.key});
 
-  Future<void> _handleDownload(BuildContext context) async {
+  Future<void> _handleMacDownload(BuildContext context) async {
     try {
       // Initialize Firebase if not already initialized
       if (Firebase.apps.isEmpty) {
@@ -1176,38 +1176,65 @@ class SuccessPage extends StatelessWidget {
 
       // Get download URLs
       final storage = FirebaseStorage.instance;
-      final macRef = storage.ref().child('downloads/mac/IKDistortion-Mac.pkg');
-      final windowsRef = storage.ref().child('downloads/windows/IKDistortion-Windows.exe');
+      final auRef = storage.ref().child('downloads/mac/au.pkg');
+      final vst3Ref = storage.ref().child('downloads/mac/vst3.pkg');
 
       // Get download URLs
-      final macUrl = await macRef.getDownloadURL();
-      final windowsUrl = await windowsRef.getDownloadURL();
+      final auUrl = await auRef.getDownloadURL();
+      final vst3Url = await vst3Ref.getDownloadURL();
 
       // Start downloads
-      html.window.open(macUrl, '_blank');
+      html.window.open(auUrl, '_blank');
       // Add a small delay for the second download to ensure browser doesn't block it
       Future.delayed(const Duration(seconds: 1), () {
-        html.window.open(windowsUrl, '_blank');
+        html.window.open(vst3Url, '_blank');
       });
     } catch (e) {
       print('Download error: $e');
       if (context.mounted) {
-        // Show error dialog
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Download Error'),
-            content: Text('Failed to start download: $e'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        _showErrorDialog(context, e);
       }
     }
+  }
+
+  Future<void> _handleWindowsDownload(BuildContext context) async {
+    try {
+      // Initialize Firebase if not already initialized
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
+
+      // Get download URL
+      final storage = FirebaseStorage.instance;
+      final windowsRef = storage.ref().child('downloads/windows/IKDistortion-Windows.zip');
+      final windowsUrl = await windowsRef.getDownloadURL();
+
+      // Start download
+      html.window.open(windowsUrl, '_blank');
+    } catch (e) {
+      print('Download error: $e');
+      if (context.mounted) {
+        _showErrorDialog(context, e);
+      }
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, dynamic error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Download Error'),
+        content: Text('Failed to start download: $error'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1247,7 +1274,7 @@ class SuccessPage extends StatelessWidget {
                   child: Column(
                     children: [
                       const Text(
-                        'Your download will start automatically.\nIf it doesn\'t, click the button below.',
+                        'Choose your platform to download:',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -1255,21 +1282,55 @@ class SuccessPage extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => _handleDownload(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.cyan,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 15,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () => _handleMacDownload(context),
+                            icon: const Icon(Icons.apple),
+                            label: const Text(
+                              'DOWNLOAD FOR MAC',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'DOWNLOAD NOW',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(width: 20),
+                          ElevatedButton.icon(
+                            onPressed: () => _handleWindowsDownload(context),
+                            icon: const Icon(Icons.window),
+                            label: const Text(
+                              'DOWNLOAD FOR WINDOWS',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Note: Mac download includes both AU and VST3 plugins',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ],
