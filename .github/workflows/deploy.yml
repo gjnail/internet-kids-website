@@ -1,0 +1,40 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web app
+        run: flutter build web
+
+      - name: Setup Firebase CLI
+        uses: firebase/firebase-tools-action@v1
+        with:
+          version: latest
+          firebase_token: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy to Firebase
+        run: |
+          firebase deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }} 
