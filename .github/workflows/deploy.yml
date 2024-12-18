@@ -10,6 +10,9 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: internet_kids_website
 
     steps:
       - uses: actions/checkout@v3
@@ -26,17 +29,17 @@ jobs:
 
       - name: Create .env file
         run: |
+          touch .env
           echo "FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}" >> .env
           echo "FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}" >> .env
           echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
           echo "FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}" >> .env
           echo "FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}" >> .env
           echo "FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}" >> .env
-        working-directory: internet_kids_website
+          cat .env
 
       - name: Build web app
         run: flutter build web
-        working-directory: internet_kids_website
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
