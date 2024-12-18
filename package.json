@@ -1,0 +1,10 @@
+{
+  "name": "internet-kids-website",
+  "version": "1.0.0",
+  "description": "Internet Kids Distortion Plugin Website",
+  "private": true,
+  "scripts": {
+    "build": "flutter build web",
+    "deploy": "vercel"
+  }
+} 

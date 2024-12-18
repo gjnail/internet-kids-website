@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "internet-kids-plugins-site"
+  },
+  "targets": {
+    "internet-kids-plugins-site": {
+      "hosting": {
+        "main": [
+          "internet-kids-plugins-site"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
