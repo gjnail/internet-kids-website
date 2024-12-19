@@ -94,6 +94,8 @@
   </style>
 </head>
 <body>
+  <div id="flutter_app"></div>
+  
   <div class="loading" id="loading">
     <div class="loading-text">Loading Internet Kids Distortion</div>
     <div class="loading-indicator"></div>
@@ -126,7 +128,6 @@
           let appRunner;
           try {
             appRunner = await engineInitializer.initializeEngine({
-              hostElement: document.querySelector('#flutter_app'),
               renderer: 'html'
             });
           } catch (e) {
