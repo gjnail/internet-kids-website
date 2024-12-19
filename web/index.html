@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Internet Kids Distortion - A 90s-inspired audio plugin">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,13 +23,6 @@
   <script>
     // The value below is injected by flutter build, do not touch.
     var serviceWorkerVersion = null;
-    
-    // Prevent automatic reloads on mobile
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/flutter_service_worker.js');
-      });
-    }
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
@@ -43,6 +36,7 @@
       overflow: hidden;
       position: fixed;
       background-color: #280040;
+      overscroll-behavior: none;
     }
 
     .loading {
@@ -57,6 +51,7 @@
       background-color: #280040;
       flex-direction: column;
       font-family: 'Courier New', monospace;
+      z-index: 9999;
     }
 
     .loading-text {
@@ -87,6 +82,7 @@
       font-family: 'Courier New', monospace;
       max-width: 600px;
       margin: 20px auto;
+      z-index: 9999;
     }
 
     .error-title {
@@ -121,10 +117,22 @@
   </div>
 
   <script>
+    // Prevent default touch behaviors
+    document.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    // Prevent context menu
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+
     window.addEventListener('load', function() {
       var loading = document.getElementById('loading');
       var error = document.getElementById('error');
       var errorMessage = document.getElementById('error-message');
+      var maxRetries = 3;
+      var retryCount = 0;
 
       function showError(message) {
         console.error('Flutter initialization error:', message);
@@ -133,53 +141,56 @@
         errorMessage.textContent = message;
       }
 
-      // Initialize Flutter
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-          serviceWorkerUrl: '/flutter_service_worker.js?v=' + serviceWorkerVersion
-        },
-        onEntrypointLoaded: async function(engineInitializer) {
-          let appRunner;
-          try {
-            appRunner = await engineInitializer.initializeEngine({
-              renderer: 'html',
-              useColorEmoji: true
-            });
-          } catch (e) {
-            showError('Failed to initialize Flutter engine: ' + e);
-            return;
+      function initializeFlutter() {
+        // Initialize Flutter with retry logic
+        _flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: serviceWorkerVersion
+          },
+          onEntrypointLoaded: async function(engineInitializer) {
+            try {
+              const appRunner = await engineInitializer.initializeEngine({
+                useColorEmoji: true,
+                renderer: "html"
+              });
+              await appRunner.runApp();
+              loading.remove();
+            } catch (e) {
+              console.error('Error during Flutter initialization:', e);
+              if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`Retrying initialization (attempt ${retryCount}/${maxRetries})...`);
+                setTimeout(initializeFlutter, 1000);
+              } else {
+                showError('Failed to initialize the app after multiple attempts. Please refresh the page.');
+              }
+            }
           }
+        }).catch(function(error) {
+          showError('Failed to load Flutter app: ' + error);
+        });
+      }
 
-          try {
-            await appRunner.runApp();
-          } catch (e) {
-            showError('Failed to run Flutter app: ' + e);
-            return;
-          }
-
-          loading.remove();
-        }
-      }).catch(function(error) {
-        showError('Failed to load Flutter app: ' + error);
-      });
+      // Start initialization
+      initializeFlutter();
     });
 
-    // Handle errors that occur during app execution
-    window.onerror = function(message, source, lineno, colno, error) {
-      console.error('Runtime error:', {message, source, lineno, colno, error});
-      var errorDiv = document.getElementById('error');
-      var errorMessage = document.getElementById('error-message');
-      if (errorDiv && errorMessage) {
-        errorDiv.style.display = 'block';
-        errorMessage.textContent = 'An error occurred while running the app: ' + message;
-      }
-    };
+    // Prevent the default reload behavior
+    window.addEventListener('beforeunload', function(e) {
+      e.preventDefault();
+      e.returnValue = '';
+    });
 
-    // Prevent the default reload behavior on mobile
-    window.onbeforeunload = function() {
-      return false;
-    };
+    // Handle visibility change
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // App is being hidden (e.g., switching tabs or minimizing)
+        console.log('App visibility changed to hidden');
+      } else {
+        // App is being shown
+        console.log('App visibility changed to visible');
+      }
+    });
   </script>
 </body>
 </html>
