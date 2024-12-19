@@ -31,10 +31,23 @@ class SuccessPage extends StatelessWidget {
       print('VST3 URL: $vst3Url');
 
       print('Opening download windows...');
-      html.window.open(auUrl, '_blank');
-      Future.delayed(const Duration(seconds: 1), () {
-        html.window.open(vst3Url, '_blank');
-      });
+      // Create invisible anchor elements and trigger clicks
+      final auAnchor = html.AnchorElement(href: auUrl)
+        ..setAttribute('download', 'IKDistortion-AU.pkg')
+        ..style.display = 'none';
+      final vst3Anchor = html.AnchorElement(href: vst3Url)
+        ..setAttribute('download', 'IKDistortion-VST3.pkg')
+        ..style.display = 'none';
+        
+      html.document.body!.children.add(auAnchor);
+      html.document.body!.children.add(vst3Anchor);
+      
+      auAnchor.click();
+      vst3Anchor.click();
+      
+      // Clean up the anchor elements
+      auAnchor.remove();
+      vst3Anchor.remove();
     } catch (e, stackTrace) {
       print('Download error: $e');
       print('Stack trace: $stackTrace');
