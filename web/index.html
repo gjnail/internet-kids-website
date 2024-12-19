@@ -19,84 +19,145 @@
   <title>Internet Kids Distortion</title>
   <link rel="manifest" href="manifest.json">
 
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    var serviceWorkerVersion = null;
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
+  <script src="flutter.js" defer></script>
+
   <style>
     body {
       background-color: #280040;
       margin: 0;
+      padding: 0;
       overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
     }
+
     .loading {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #280040;
+      flex-direction: column;
       font-family: 'Courier New', monospace;
+    }
+
+    .loading-text {
       color: #00ffff;
       font-size: 24px;
       text-shadow: 2px 2px 4px rgba(0, 255, 255, 0.5);
+      margin-bottom: 20px;
     }
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0; }
-      100% { opacity: 1; }
+
+    .loading-indicator {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #00ffff;
+      animation: spin 1s ease-in-out infinite;
     }
-    .loading::after {
-      content: '_';
-      animation: blink 1s infinite;
-      margin-left: 4px;
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
+
     .error {
       display: none;
-      color: #ff0000;
+      color: #ff0066;
       text-align: center;
-      margin-top: 20px;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .error-title {
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(255, 0, 102, 0.5);
+    }
+
+    .error-message {
+      font-size: 16px;
+      opacity: 0.8;
     }
   </style>
-
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
-  </script>
-  <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
 </head>
 <body>
-  <div class="loading">Loading Internet Kids Distortion...</div>
-  <div class="error" id="error-message"></div>
+  <div class="loading" id="loading">
+    <div class="loading-text">Loading Internet Kids Distortion</div>
+    <div class="loading-indicator"></div>
+  </div>
+
+  <div class="error" id="error">
+    <div class="error-title">Error</div>
+    <div class="error-message" id="error-message"></div>
+  </div>
+
   <script>
-    window.addEventListener('load', function(ev) {
-      var loading = document.querySelector('.loading');
-      var errorMessage = document.querySelector('#error-message');
+    window.addEventListener('load', function() {
+      var loading = document.getElementById('loading');
+      var error = document.getElementById('error');
+      var errorMessage = document.getElementById('error-message');
 
       function showError(message) {
-        loading.style.display = 'none';
-        errorMessage.style.display = 'block';
-        errorMessage.textContent = message;
         console.error('Flutter initialization error:', message);
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        errorMessage.textContent = message;
       }
 
-      try {
-        // Download main.dart.js
-        _flutter.loader.loadEntrypoint({
-          serviceWorker: {
-            serviceWorkerVersion: serviceWorkerVersion,
-          },
-          onEntrypointLoaded: async function(engineInitializer) {
-            try {
-              const appRunner = await engineInitializer.initializeEngine();
-              await appRunner.runApp();
-              loading.remove();
-            } catch (error) {
-              showError('Failed to initialize the app: ' + error);
-            }
+      // Initialize Flutter
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: async function(engineInitializer) {
+          let appRunner;
+          try {
+            appRunner = await engineInitializer.initializeEngine({
+              hostElement: document.querySelector('#flutter_app'),
+              renderer: 'html'
+            });
+          } catch (e) {
+            showError('Failed to initialize Flutter engine: ' + e);
+            return;
           }
-        }).catch(function(error) {
-          showError('Failed to load the app: ' + error);
-        });
-      } catch (error) {
-        showError('Failed to start the app: ' + error);
-      }
+
+          try {
+            await appRunner.runApp();
+          } catch (e) {
+            showError('Failed to run Flutter app: ' + e);
+            return;
+          }
+
+          loading.remove();
+        }
+      }).catch(function(error) {
+        showError('Failed to load Flutter app: ' + error);
+      });
     });
+
+    // Handle errors that occur during app execution
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Runtime error:', {message, source, lineno, colno, error});
+      var errorDiv = document.getElementById('error');
+      var errorMessage = document.getElementById('error-message');
+      if (errorDiv && errorMessage) {
+        errorDiv.style.display = 'block';
+        errorMessage.textContent = 'An error occurred while running the app: ' + message;
+      }
+    };
   </script>
 </body>
 </html>
