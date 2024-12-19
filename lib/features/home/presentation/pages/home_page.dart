@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:internet_kids_website/core/routes/app_router.dart';
 import 'package:internet_kids_website/features/home/presentation/bloc/home_bloc.dart';
 import 'package:internet_kids_website/features/home/presentation/widgets/animated_title.dart';
-import 'package:internet_kids_website/features/home/presentation/widgets/plugin_card.dart';
+import 'package:internet_kids_website/features/home/presentation/widgets/project_card.dart';
 import 'package:internet_kids_website/shared/widgets/grid_painter.dart';
 
 class HomePage extends StatefulWidget {
@@ -65,7 +66,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           const SizedBox(height: 60),
                           const AnimatedTitle(),
                           const SizedBox(height: 60),
-                          const PluginCard(),
+                          ProjectCard(
+                            title: 'DISTORTION',
+                            description: 'Destroy your kicks with style',
+                            onTap: () => Navigator.pushNamed(context, AppRouter.distortion),
+                          ),
+                          const SizedBox(height: 20),
+                          const ProjectCard(
+                            title: 'COMING SOON',
+                            description: 'More techno weapons incoming',
+                            onTap: null,
+                            enabled: false,
+                          ),
                           const SizedBox(height: 60),
                         ],
                       ),

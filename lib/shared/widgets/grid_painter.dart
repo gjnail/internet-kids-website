@@ -274,7 +274,7 @@ class GridPainter extends CustomPainter {
       final y = size.height * 0.5 + math.sin(time * 3 + seed) * size.height * 0.4;
       
       // Simpler particle rendering on mobile
-      final coreSize = isLowPerformanceMode ? 2 : (3 + math.sin(time * 4 + seed) * 1);
+      final coreSize = isLowPerformanceMode ? 2.0 : (3.0 + math.sin(time * 4 + seed) * 1.0);
       particlePaint.color = Colors.cyan.withOpacity(0.6);
       canvas.drawCircle(Offset(x, y), coreSize, particlePaint);
       
