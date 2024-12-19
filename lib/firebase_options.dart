@@ -8,27 +8,29 @@ class DefaultFirebaseOptions {
     if (kIsWeb) {
       return web;
     }
-    // Handle other platforms if needed
     throw UnsupportedError(
       'DefaultFirebaseOptions are not configured for this platform.',
     );
   }
 
-  static String _getEnvOrDefault(String key, String defaultValue) {
+  static String _getRequiredEnvVar(String key) {
     try {
-      return dotenv.get(key, fallback: defaultValue);
+      final value = dotenv.env[key];
+      if (value == null || value.isEmpty) {
+        throw Exception('Required environment variable $key is not set');
+      }
+      return value;
     } catch (e) {
-      print('Warning: Using default value for $key');
-      return defaultValue;
+      throw Exception('Failed to load required environment variable $key: $e');
     }
   }
 
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: _getEnvOrDefault('FIREBASE_API_KEY', 'AIzaSyBUD5pwzNg9njQWVmEB6mBTDgeO5-yOFLQ'),
-    authDomain: _getEnvOrDefault('FIREBASE_AUTH_DOMAIN', 'internet-kids-plugins-site.firebaseapp.com'),
-    projectId: _getEnvOrDefault('FIREBASE_PROJECT_ID', 'internet-kids-plugins-site'),
-    storageBucket: _getEnvOrDefault('FIREBASE_STORAGE_BUCKET', 'internet-kids-plugins-site.firebasestorage.app'),
-    messagingSenderId: _getEnvOrDefault('FIREBASE_MESSAGING_SENDER_ID', '329708958105'),
-    appId: _getEnvOrDefault('FIREBASE_APP_ID', '1:329708958105:web:14ac6f9c985c1594bb2308'),
+    apiKey: _getRequiredEnvVar('FIREBASE_API_KEY'),
+    authDomain: _getRequiredEnvVar('FIREBASE_AUTH_DOMAIN'),
+    projectId: _getRequiredEnvVar('FIREBASE_PROJECT_ID'),
+    storageBucket: _getRequiredEnvVar('FIREBASE_STORAGE_BUCKET'),
+    messagingSenderId: _getRequiredEnvVar('FIREBASE_MESSAGING_SENDER_ID'),
+    appId: _getRequiredEnvVar('FIREBASE_APP_ID'),
   );
 } 
