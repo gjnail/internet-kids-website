@@ -7,6 +7,7 @@ class GridPainter extends CustomPainter {
   final double intensity;
   final Color color;
   final List<Offset> ghostParticles;
+  final bool isLowPerformanceMode;
 
   GridPainter({
     required this.animation,
@@ -14,6 +15,7 @@ class GridPainter extends CustomPainter {
     required this.intensity,
     required this.color,
     this.ghostParticles = const [],
+    this.isLowPerformanceMode = false,
   }) : super(repaint: animation);
 
   @override
@@ -139,29 +141,33 @@ class GridPainter extends CustomPainter {
 
   void _paintCyberpunkMode(Canvas canvas, Size size) {
     final time = animation.value;
+    final scale = isLowPerformanceMode ? 1.5 : 1.0;
     
-    // Draw hexagonal grid
-    _drawHexGrid(canvas, size, time);
+    // Draw hexagonal grid with reduced density on mobile
+    _drawHexGrid(canvas, size, time, scale);
     
-    // Draw energy lines
-    _drawEnergyLines(canvas, size, time);
+    // Draw fewer energy lines on mobile
+    _drawEnergyLines(canvas, size, time, scale);
     
-    // Draw particles with enhanced effects
-    _drawEnhancedParticles(canvas, size, time);
+    // Draw fewer particles with simpler effects on mobile
+    _drawEnhancedParticles(canvas, size, time, scale);
   }
 
-  void _drawHexGrid(Canvas canvas, Size size, double time) {
-    final hexSize = size.width * 0.15;
+  void _drawHexGrid(Canvas canvas, Size size, double time, double scale) {
+    final hexSize = size.width * 0.15 * scale;
     final rows = (size.height / (hexSize * 0.75)).ceil();
     final cols = (size.width / (hexSize * math.sqrt(3) * 0.5)).ceil();
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..isAntiAlias = true;
+      ..isAntiAlias = false;  // Disable antialiasing for better performance
 
-    for (var row = -1; row <= rows; row++) {
-      for (var col = -1; col <= cols; col++) {
+    // Reduce the number of hexagons drawn based on performance mode
+    final skipRate = isLowPerformanceMode ? 2 : 1;
+
+    for (var row = -1; row <= rows; row += skipRate) {
+      for (var col = -1; col <= cols; col += skipRate) {
         final xOffset = col * hexSize * math.sqrt(3) * 0.5;
         final yOffset = row * hexSize * 0.75 + (col.isEven ? hexSize * 0.375 : 0);
         
@@ -187,11 +193,10 @@ class GridPainter extends CustomPainter {
         }
         path.close();
         
-        // Draw hex
         canvas.drawPath(path, paint);
         
-        // Draw glow effect
-        if (pulseEffect > 0.8) {
+        // Only draw glow effect on high-performance mode
+        if (!isLowPerformanceMode && pulseEffect > 0.8) {
           final glowPaint = Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2
@@ -203,19 +208,23 @@ class GridPainter extends CustomPainter {
     }
   }
 
-  void _drawEnergyLines(Canvas canvas, Size size, double time) {
+  void _drawEnergyLines(Canvas canvas, Size size, double time, double scale) {
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 2
+      ..isAntiAlias = false;  // Disable antialiasing for better performance
 
-    final numLines = 5;
+    // Reduce number of lines on mobile
+    final numLines = isLowPerformanceMode ? 3 : 5;
+    
     for (var i = 0; i < numLines; i++) {
       final path = Path();
       final startX = size.width * (i / (numLines - 1));
       path.moveTo(startX, 0);
 
-      final controlPoints = List.generate(4, (index) {
-        final progress = index / 3;
+      // Reduce number of control points on mobile
+      final controlPoints = List.generate(isLowPerformanceMode ? 3 : 4, (index) {
+        final progress = index / (isLowPerformanceMode ? 2 : 3);
         final wave = math.sin(time * 2 + i + progress * math.pi) * size.width * 0.2;
         return Offset(
           startX + wave,
@@ -223,67 +232,80 @@ class GridPainter extends CustomPainter {
         );
       });
 
-      path.cubicTo(
-        controlPoints[1].dx, controlPoints[1].dy,
-        controlPoints[2].dx, controlPoints[2].dy,
-        controlPoints[3].dx, controlPoints[3].dy,
-      );
+      if (isLowPerformanceMode) {
+        path.quadraticBezierTo(
+          controlPoints[1].dx, controlPoints[1].dy,
+          controlPoints[2].dx, controlPoints[2].dy,
+        );
+      } else {
+        path.cubicTo(
+          controlPoints[1].dx, controlPoints[1].dy,
+          controlPoints[2].dx, controlPoints[2].dy,
+          controlPoints[3].dx, controlPoints[3].dy,
+        );
+      }
 
-      // Draw energy line glow
-      paint.color = Colors.cyan.withOpacity(0.1);
-      paint.maskFilter = const MaskFilter.blur(BlurStyle.outer, 5);
-      canvas.drawPath(path, paint);
+      // Only draw glow effect on high-performance mode
+      if (!isLowPerformanceMode) {
+        paint.color = Colors.cyan.withOpacity(0.1);
+        paint.maskFilter = const MaskFilter.blur(BlurStyle.outer, 5);
+        canvas.drawPath(path, paint);
+      }
 
-      // Draw main line
       paint.color = Colors.cyan.withOpacity(0.3);
       paint.maskFilter = null;
       canvas.drawPath(path, paint);
     }
   }
 
-  void _drawEnhancedParticles(Canvas canvas, Size size, double time) {
-    final particleCount = math.min(40, (size.width * size.height / 25000).round());
+  void _drawEnhancedParticles(Canvas canvas, Size size, double time, double scale) {
+    final particleCount = math.min(
+      isLowPerformanceMode ? 20 : 40,
+      (size.width * size.height / (isLowPerformanceMode ? 50000 : 25000)).round()
+    );
+    
     final particlePaint = Paint()
       ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
+      ..isAntiAlias = false;  // Disable antialiasing for better performance
 
     for (var i = 0; i < particleCount; i++) {
       final seed = i * 0.1;
       final x = size.width * 0.5 + math.cos(time * 2 + seed) * size.width * 0.4;
       final y = size.height * 0.5 + math.sin(time * 3 + seed) * size.height * 0.4;
       
-      // Particle core
-      final coreSize = 3 + math.sin(time * 4 + seed) * 1;
+      // Simpler particle rendering on mobile
+      final coreSize = isLowPerformanceMode ? 2 : (3 + math.sin(time * 4 + seed) * 1);
       particlePaint.color = Colors.cyan.withOpacity(0.6);
       canvas.drawCircle(Offset(x, y), coreSize, particlePaint);
       
-      // Particle glow
-      final glowPaint = Paint()
-        ..style = PaintingStyle.fill
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
-        ..color = Colors.cyan.withOpacity(0.3);
-      canvas.drawCircle(Offset(x, y), coreSize * 2, glowPaint);
-      
-      // Energy trail
-      final trailPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = Colors.cyan.withOpacity(0.2);
-      
-      final trailPath = Path();
-      final trailLength = 20;
-      for (var j = 0; j < trailLength; j++) {
-        final t = j / trailLength;
-        final trailX = x - math.cos(time * 2 + seed) * t * 20;
-        final trailY = y - math.sin(time * 3 + seed) * t * 20;
+      // Only draw glow and trails on high-performance mode
+      if (!isLowPerformanceMode) {
+        final glowPaint = Paint()
+          ..style = PaintingStyle.fill
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
+          ..color = Colors.cyan.withOpacity(0.3);
+        canvas.drawCircle(Offset(x, y), coreSize * 2, glowPaint);
         
-        if (j == 0) {
-          trailPath.moveTo(trailX, trailY);
-        } else {
-          trailPath.lineTo(trailX, trailY);
+        final trailPaint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = Colors.cyan.withOpacity(0.2);
+        
+        final trailPath = Path();
+        final trailLength = 20;
+        for (var j = 0; j < trailLength; j++) {
+          final t = j / trailLength;
+          final trailX = x - math.cos(time * 2 + seed) * t * 20;
+          final trailY = y - math.sin(time * 3 + seed) * t * 20;
+          
+          if (j == 0) {
+            trailPath.moveTo(trailX, trailY);
+          } else {
+            trailPath.lineTo(trailX, trailY);
+          }
         }
+        canvas.drawPath(trailPath, trailPaint);
       }
-      canvas.drawPath(trailPath, trailPaint);
     }
   }
 
@@ -292,5 +314,6 @@ class GridPainter extends CustomPainter {
     animation.value != oldDelegate.animation.value ||
     raveMode != oldDelegate.raveMode ||
     intensity != oldDelegate.intensity ||
-    color != oldDelegate.color;
+    color != oldDelegate.color ||
+    isLowPerformanceMode != oldDelegate.isLowPerformanceMode;
 } 

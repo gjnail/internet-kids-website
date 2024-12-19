@@ -51,21 +51,26 @@ class AnimatedTitle extends StatelessWidget {
               scale: raveState.isRaveMode ? 1.0 + raveState.intensity * 0.2 : 1.0,
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: Text(
-                  raveState.isRaveMode ? RaveState.raveText[raveState.currentIndex] : "AUDIO PLUGINS",
-                  key: ValueKey<String>(raveState.isRaveMode ? RaveState.raveText[raveState.currentIndex] : "static"),
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: raveState.currentColor,
-                    shadows: raveState.isRaveMode
-                        ? [
-                            Shadow(
-                              color: raveState.currentColor,
-                              blurRadius: 20 * raveState.intensity,
-                            )
-                          ]
-                        : null,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    raveState.isRaveMode ? RaveState.raveText[raveState.currentIndex] : "AUDIO PLUGINS",
+                    key: ValueKey<String>(raveState.isRaveMode ? RaveState.raveText[raveState.currentIndex] : "static"),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: raveState.currentColor,
+                      shadows: raveState.isRaveMode
+                          ? [
+                              Shadow(
+                                color: raveState.currentColor,
+                                blurRadius: 20 * raveState.intensity,
+                              )
+                            ]
+                          : null,
+                    ),
                   ),
                 ),
               ),
