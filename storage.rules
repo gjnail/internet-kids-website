@@ -7,6 +7,10 @@ service firebase.storage {
       allow read: if true;
       allow write: if false;
     }
+
+    match /IKReverb/{allPaths=**} {
+     allow read: if true;
+    }
     
     // Default rule - deny everything else
     match /{allPaths=**} {

@@ -4,8 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:internet_kids_website/core/routes/app_router.dart';
 
-class SuccessPage extends StatelessWidget {
-  const SuccessPage({super.key});
+class SuccessReverbPage extends StatelessWidget {
+  const SuccessReverbPage({super.key});
 
   Future<void> _handleMacDownload(BuildContext context) async {
     try {
@@ -20,34 +20,25 @@ class SuccessPage extends StatelessWidget {
       print('Getting Firebase Storage instance...');
       final storage = FirebaseStorage.instance;
       
-      print('Creating references to Mac files...');
-      final auRef = storage.ref().child('downloads/mac/au.pkg');
-      final vst3Ref = storage.ref().child('downloads/mac/vst3.pkg');
+      print('Creating reference to Mac file...');
+      final macRef = storage.ref().child('IKReverb/mac/IKReverb-1.0.0-macOS.pkg');
 
-      print('Getting download URLs...');
-      final auUrl = await auRef.getDownloadURL();
-      print('AU URL: $auUrl');
-      final vst3Url = await vst3Ref.getDownloadURL();
-      print('VST3 URL: $vst3Url');
+      print('Getting download URL...');
+      final macUrl = await macRef.getDownloadURL();
+      print('Mac URL: $macUrl');
 
-      print('Opening download windows...');
-      // Create invisible anchor elements and trigger clicks
-      final auAnchor = html.AnchorElement(href: auUrl)
-        ..setAttribute('download', 'IKDistortion-AU.pkg')
-        ..style.display = 'none';
-      final vst3Anchor = html.AnchorElement(href: vst3Url)
-        ..setAttribute('download', 'IKDistortion-VST3.pkg')
+      print('Opening download window...');
+      // Create invisible anchor element and trigger click
+      final macAnchor = html.AnchorElement(href: macUrl)
+        ..setAttribute('download', 'IKReverb-1.0.0-macOS.pkg')
         ..style.display = 'none';
         
-      html.document.body!.children.add(auAnchor);
-      html.document.body!.children.add(vst3Anchor);
+      html.document.body!.children.add(macAnchor);
       
-      auAnchor.click();
-      vst3Anchor.click();
+      macAnchor.click();
       
-      // Clean up the anchor elements
-      auAnchor.remove();
-      vst3Anchor.remove();
+      // Clean up the anchor element
+      macAnchor.remove();
     } catch (e, stackTrace) {
       print('Download error: $e');
       print('Stack trace: $stackTrace');
@@ -71,7 +62,7 @@ class SuccessPage extends StatelessWidget {
       final storage = FirebaseStorage.instance;
       
       print('Creating reference to Windows file...');
-      final windowsRef = storage.ref().child('downloads/windows/IKDistortion-Windows.zip');
+      final windowsRef = storage.ref().child('IKReverb/windows/IKReverb-Windows.zip');
 
       print('Getting download URL...');
       final windowsUrl = await windowsRef.getDownloadURL();

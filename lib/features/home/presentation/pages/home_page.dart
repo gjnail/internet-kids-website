@@ -120,6 +120,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                 ),
                                 const SizedBox(height: 20),
                                 ProjectCard(
+                                  title: 'REVERB',
+                                  description: 'Ethereal spaces and shimmering tails',
+                                  onTap: () => Navigator.pushNamed(context, AppRouter.reverb),
+                                ),
+                                const SizedBox(height: 20),
+                                ProjectCard(
                                   title: 'COMING SOON',
                                   description: 'More techno weapons incoming',
                                   onTap: () {},
