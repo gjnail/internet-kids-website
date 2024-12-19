@@ -8,8 +8,12 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // Load environment variables with fallback to empty env
+  try {
+    await dotenv.load();
+  } catch (e) {
+    print('Warning: Failed to load .env file, using default values');
+  }
   
   // Initialize Firebase
   await Firebase.initializeApp(

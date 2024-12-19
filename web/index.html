@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -45,6 +45,12 @@
       animation: blink 1s infinite;
       margin-left: 4px;
     }
+    .error {
+      display: none;
+      color: #ff0000;
+      text-align: center;
+      margin-top: 20px;
+    }
   </style>
 
   <script>
@@ -56,20 +62,40 @@
 </head>
 <body>
   <div class="loading">Loading Internet Kids Distortion...</div>
+  <div class="error" id="error-message"></div>
   <script>
     window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-            document.querySelector('.loading').remove();
-          });
-        }
-      });
+      var loading = document.querySelector('.loading');
+      var errorMessage = document.querySelector('#error-message');
+
+      function showError(message) {
+        loading.style.display = 'none';
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = message;
+        console.error('Flutter initialization error:', message);
+      }
+
+      try {
+        // Download main.dart.js
+        _flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: serviceWorkerVersion,
+          },
+          onEntrypointLoaded: async function(engineInitializer) {
+            try {
+              const appRunner = await engineInitializer.initializeEngine();
+              await appRunner.runApp();
+              loading.remove();
+            } catch (error) {
+              showError('Failed to initialize the app: ' + error);
+            }
+          }
+        }).catch(function(error) {
+          showError('Failed to load the app: ' + error);
+        });
+      } catch (error) {
+        showError('Failed to start the app: ' + error);
+      }
     });
   </script>
 </body>
