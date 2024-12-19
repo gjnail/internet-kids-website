@@ -37,6 +37,7 @@
       position: fixed;
       background-color: #280040;
       overscroll-behavior: none;
+      touch-action: none;
     }
 
     .loading {
@@ -100,6 +101,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      touch-action: none;
     }
   </style>
 </head>
@@ -117,9 +119,24 @@
   </div>
 
   <script>
-    // Prevent default touch behaviors
+    // Prevent pull-to-refresh
+    document.body.style.overscrollBehavior = 'none';
+    
+    // Prevent all touch events except those needed
+    document.addEventListener('touchstart', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
     document.addEventListener('touchmove', function(e) {
       e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+      }
     }, { passive: false });
 
     // Prevent context menu
@@ -127,7 +144,13 @@
       e.preventDefault();
     });
 
+    // Initialize Flutter only once
+    let isInitialized = false;
+
     window.addEventListener('load', function() {
+      if (isInitialized) return;
+      isInitialized = true;
+
       var loading = document.getElementById('loading');
       var error = document.getElementById('error');
       var errorMessage = document.getElementById('error-message');
@@ -141,56 +164,64 @@
         errorMessage.textContent = message;
       }
 
-      function initializeFlutter() {
-        // Initialize Flutter with retry logic
-        _flutter.loader.loadEntrypoint({
-          serviceWorker: {
-            serviceWorkerVersion: serviceWorkerVersion
-          },
-          onEntrypointLoaded: async function(engineInitializer) {
-            try {
-              const appRunner = await engineInitializer.initializeEngine({
-                useColorEmoji: true,
-                renderer: "html"
-              });
-              await appRunner.runApp();
-              loading.remove();
-            } catch (e) {
-              console.error('Error during Flutter initialization:', e);
-              if (retryCount < maxRetries) {
-                retryCount++;
-                console.log(`Retrying initialization (attempt ${retryCount}/${maxRetries})...`);
-                setTimeout(initializeFlutter, 1000);
-              } else {
-                showError('Failed to initialize the app after multiple attempts. Please refresh the page.');
-              }
+      async function initializeFlutter() {
+        try {
+          // Unregister any existing service workers
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+              await registration.unregister();
             }
           }
-        }).catch(function(error) {
+
+          // Initialize Flutter with retry logic
+          await _flutter.loader.loadEntrypoint({
+            onEntrypointLoaded: async function(engineInitializer) {
+              try {
+                const appRunner = await engineInitializer.initializeEngine({
+                  useColorEmoji: true,
+                  renderer: "html"
+                });
+                await appRunner.runApp();
+                loading.remove();
+              } catch (e) {
+                console.error('Error during Flutter initialization:', e);
+                if (retryCount < maxRetries) {
+                  retryCount++;
+                  console.log(`Retrying initialization (attempt ${retryCount}/${maxRetries})...`);
+                  setTimeout(initializeFlutter, 1000);
+                } else {
+                  showError('Failed to initialize the app after multiple attempts. Please refresh the page.');
+                }
+              }
+            }
+          });
+        } catch (error) {
           showError('Failed to load Flutter app: ' + error);
-        });
+        }
       }
 
       // Start initialization
       initializeFlutter();
     });
 
-    // Prevent the default reload behavior
-    window.addEventListener('beforeunload', function(e) {
-      e.preventDefault();
-      e.returnValue = '';
-    });
-
-    // Handle visibility change
+    // Handle page visibility changes
     document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-        // App is being hidden (e.g., switching tabs or minimizing)
-        console.log('App visibility changed to hidden');
-      } else {
-        // App is being shown
-        console.log('App visibility changed to visible');
+      if (!document.hidden) {
+        // Prevent reload when the page becomes visible again
+        window.history.pushState({}, '');
       }
     });
+
+    // Prevent navigation
+    window.addEventListener('popstate', function() {
+      window.history.pushState({}, '');
+    });
+
+    // Prevent reload on mobile
+    window.onbeforeunload = function() {
+      return false;
+    };
   </script>
 </body>
 </html>
